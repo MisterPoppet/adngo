@@ -19,11 +19,11 @@ const (
 // This is our scopes struct to check for that.
 type Scopes []string
 
-func (s *Scopes) Spaced() string {
+func (s Scopes) Spaced() string {
 	return strings.Join(s, " ")
 }
 
-func (s *Scopes) String() string {
+func (s Scopes) String() string {
 	return strings.Join(s, ",")
 }
 
@@ -37,11 +37,11 @@ type App struct {
 
 var httpClient = &http.Client{}
 
-func (a *App) do(method, url, bodyType string, data Values) (resp *http.Response, err error) {
+func (a *App) do(method, url, bodyType string, data url.Values) (resp *http.Response, err error) {
 	if data == nil {
-		req := http.NewRequest(method, url, nil)
+		req, err := http.NewRequest(method, url, nil)
 	} else {
-		req := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
+		req, err := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
 	}
 
 	if a.accessToken != "" {
@@ -51,7 +51,7 @@ func (a *App) do(method, url, bodyType string, data Values) (resp *http.Response
 		req.Header.Add("Content-Type", bodyType)
 	}
 
-	return httpClient.do(req)
+	return httpClient.Do(req)
 }
 
 func (a *App) get(url, bodyType string) (resp *http.Response, err error) {
@@ -131,11 +131,11 @@ func (a *App) GetConfig() (config interface{}) {
 		log.Fatal(err)
 	}
 
-	var config interface{}
+	var conf interface{}
 	err = json.Unmarshal(resp, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return config
+	return conf
 }
