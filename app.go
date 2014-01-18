@@ -3,16 +3,20 @@ package adngo
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
+// Our API Urls
 const (
 	baseURI = "https://alpha-api.app.net/"
 	authURI = "https://account.app.net/oauth/"
 )
 
+// This is our scopes struct to check for that.
 type Scopes []string
 
 func (s *Scopes) Spaced() string {
@@ -34,7 +38,11 @@ type App struct {
 var httpClient = &http.Client{}
 
 func (a *App) Do(method, url, bodyType string, data Values) (resp *Response, err error) {
-	req := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
+	if data == nil {
+		req := http.NewRequest(method, url, nil)
+	} else {
+		req := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
+	}
 
 	if a.accessToken != "" {
 		req.Header.Add("Authorization", "Bearer "+a.accessToken)
@@ -47,7 +55,7 @@ func (a *App) Do(method, url, bodyType string, data Values) (resp *Response, err
 }
 
 func (a *App) Get(url, bodyType string) (resp *Response, err error) {
-	return a.Do("GET", url, bodyType, url.Values{})
+	return a.Do("GET", url, bodyType, nil)
 }
 
 func (a *App) Post(url string, bodyType string, data Values) (resp *Response, err error) {
@@ -63,9 +71,10 @@ func (a *App) Patch(url string, bodyType string, data Values) (resp *Response, e
 }
 
 func (a *App) Delete(url string) (resp *Response, err error) {
-	return a.Do("DELETE", url, bodyType, url.Values{})
+	return a.Do("DELETE", url, bodyType, nil)
 }
 
+// Do we even need this??
 func (a *App) VerifyToken(delegate bool) {
 	if delegate {
 		auth := []byte(a.clientId + ":" + a.clientSecret)
@@ -113,4 +122,20 @@ func (a *App) ProcessText(text string) {
 	data.Add("text", text)
 
 	resp, err := a.Post(baseURI+"stream/0/text/process", "", data)
+}
+
+// Retrieves the App.Net Configuration Object
+func (a *App) GetConfig() {
+	resp, err := a.Get(baseURI+"stream/0/config", "application/json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var config interface{}
+	err = json.Unmarshal(resp, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print(config['meta']['code'])
+	return config
 }
