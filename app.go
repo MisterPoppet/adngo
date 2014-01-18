@@ -139,3 +139,19 @@ func (a *App) GetConfig() {
 	log.Print(config["meta"]["code"])
 	return config
 }
+
+// Retrieves the App.Net Configuration Object
+func (a *App) GetConfig() {
+	resp, err := a.Get(baseURI+"stream/0/config", "application/json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var config interface{}
+	err = json.Unmarshal(resp, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print(config['meta']['code'])
+	return config
+}
