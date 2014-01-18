@@ -125,17 +125,17 @@ func (a *App) ProcessText(text string) {
 }
 
 // Retrieves the App.Net Configuration Object
-func (a *App) GetConfig() {
+func (a *App) GetConfig() (config interface{}) {
 	resp, err := a.get(baseURI+"stream/0/config", "application/json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var config interface{}
-	err := json.Unmarshal(resp, &config)
+	err = json.Unmarshal(resp, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Print(config["meta"]["code"])
+
 	return config
 }
