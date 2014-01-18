@@ -38,12 +38,14 @@ type App struct {
 var httpClient = &http.Client{}
 
 func (a *App) do(method, url, bodyType string, data url.Values) (resp *http.Response, err error) {
-	if data == nil {
-		req, err := http.NewRequest(method, url, nil)
-	} else {
-		req, err := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	if data != nil {
+		req.Body = bytes.NewBufferString(data.Encode())
+	}
 	if a.accessToken != "" {
 		req.Header.Add("Authorization", "Bearer "+a.accessToken)
 	}
@@ -71,7 +73,7 @@ func (a *App) patch(url string, bodyType string, data url.Values) (resp *http.Re
 }
 
 func (a *App) delete(url string) (resp *http.Response, err error) {
-	return a.do("DELETE", url, bodyType, nil)
+	return a.do("DELETE", url, "application/json", nil)
 }
 
 // Do we even need this??
