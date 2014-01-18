@@ -37,7 +37,7 @@ type App struct {
 
 var httpClient = &http.Client{}
 
-func (a *App) do(method, url, bodyType string, data Values) (resp *Response, err error) {
+func (a *App) do(method, url, bodyType string, data Values) (resp *http.Response, err error) {
 	if data == nil {
 		req := http.NewRequest(method, url, nil)
 	} else {
@@ -54,23 +54,23 @@ func (a *App) do(method, url, bodyType string, data Values) (resp *Response, err
 	return httpClient.do(req)
 }
 
-func (a *App) get(url, bodyType string) (resp *Response, err error) {
+func (a *App) get(url, bodyType string) (resp *http.Response, err error) {
 	return a.do("GET", url, bodyType, nil)
 }
 
-func (a *App) post(url string, bodyType string, data Values) (resp *Response, err error) {
+func (a *App) post(url string, bodyType string, data url.Values) (resp *http.Response, err error) {
 	return a.do("POST", url, bodyType, data)
 }
 
-func (a *App) put(url string, bodyType string, data Values) (resp *Response, err error) {
+func (a *App) put(url string, bodyType string, data url.Values) (resp *http.Response, err error) {
 	return a.do("PUT", url, bodyType, data)
 }
 
-func (a *App) patch(url string, bodyType string, data Values) (resp *Response, err error) {
+func (a *App) patch(url string, bodyType string, data url.Values) (resp *http.Response, err error) {
 	return a.do("PATCH", url, bodyType, data)
 }
 
-func (a *App) delete(url string) (resp *Response, err error) {
+func (a *App) delete(url string) (resp *http.Response, err error) {
 	return a.do("DELETE", url, bodyType, nil)
 }
 
