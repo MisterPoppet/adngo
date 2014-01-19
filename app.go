@@ -27,6 +27,14 @@ func (s Scopes) String() string {
 	return strings.Join(s, ",")
 }
 
+// A custom type that satisfies the io.ReadCloser needed by the http Request
+type dataCloser struct {
+	io.Reader
+}
+
+func (dataCloser) Close() os.Error { return nil }
+
+// Our primary API struct. It's the source of all our awesome.
 type App struct {
 	clientId     string
 	clientSecret string
@@ -44,7 +52,7 @@ func (a *App) do(method, url, bodyType string, data url.Values) (resp *http.Resp
 	}
 
 	if data != nil {
-		req.Body = bytes.NewBufferString(data.Encode())
+		req.Body = dataCloser{bytes.NewBufferString(data.Encode())}
 	}
 	if a.accessToken != "" {
 		req.Header.Add("Authorization", "Bearer "+a.accessToken)
@@ -90,7 +98,7 @@ func (a *App) VerifyToken(delegate bool) {
 	}
 }
 
-func (a *App) AuthURI(clientSide, appStore bool) {
+func (a *App) AuthURI(clientSide, appStore bool) (url string) {
 	data := url.Values{}
 	data.Add("client_id", a.clientId)
 	data.Add("redirect_uri", a.RedirectURI)
@@ -134,7 +142,7 @@ func (a *App) GetConfig() (config interface{}) {
 	}
 
 	var conf interface{}
-	err = json.Unmarshal(resp, &config)
+	err = json.Unmarshal(resp.Body, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
