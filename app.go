@@ -37,9 +37,9 @@ func (dataCloser) Close() error { return nil }
 
 // Our primary API struct. It's the source of all our awesome.
 type App struct {
-	clientId     string
-	clientSecret string
-	accessToken  string
+	ClientId     string
+	ClientSecret string
+	AccessToken  string
 	RedirectURI  string
 	Scopes       Scopes
 }
