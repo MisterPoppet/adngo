@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -32,7 +33,7 @@ type dataCloser struct {
 	io.Reader
 }
 
-func (dataCloser) Close() os.Error { return nil }
+func (dataCloser) Close() error { return nil }
 
 // Our primary API struct. It's the source of all our awesome.
 type App struct {
@@ -85,20 +86,34 @@ func (a *App) delete(url string) (resp *http.Response, err error) {
 }
 
 // Do we even need this??
-func (a *App) VerifyToken(delegate bool) {
+func (a *App) VerifyToken(delegate bool) *http.Response {
 	if delegate {
 		auth := []byte(a.clientId + ":" + a.clientSecret)
-		req := http.NewRequest("GET", baseURI+"stream/0/token", nil)
+		req, err := http.NewRequest("GET", baseURI+"stream/0/token", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString(auth))
 		req.Header.Add("Identity-Delegate-Token", "True")
 
 		resp, err := httpClient.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return resp
 	} else {
 		resp, err := a.get(baseURI+"stream/0/token", "application/json")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return resp
 	}
 }
 
-func (a *App) AuthURI(clientSide, appStore bool) (url string) {
+func (a *App) AuthURI(clientSide, appStore bool) (uri string) {
 	data := url.Values{}
 	data.Add("client_id", a.clientId)
 	data.Add("redirect_uri", a.RedirectURI)
@@ -116,7 +131,7 @@ func (a *App) AuthURI(clientSide, appStore bool) (url string) {
 	return authURI + "authenticate?" + data.Encode()
 }
 
-func (a *App) GetAccessToken(code string, app bool) {
+func (a *App) GetAccessToken(code string, app bool) *http.Response {
 	if app {
 		data := url.Values{}
 		data.Add("client_id", a.clientId)
@@ -124,14 +139,26 @@ func (a *App) GetAccessToken(code string, app bool) {
 		data.Add("grant_type", "client_credentials")
 
 		resp, err := a.post(authURI+"access_token", "", data)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return resp
 	}
+
+	return nil
 }
 
-func (a *App) ProcessText(text string) {
+func (a *App) ProcessText(text string) *http.Response {
 	data := url.Values{}
 	data.Add("text", text)
 
 	resp, err := a.post(baseURI+"stream/0/text/process", "", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return resp
 }
 
 // Retrieves the App.Net Configuration Object
@@ -142,7 +169,8 @@ func (a *App) GetConfig() (config interface{}) {
 	}
 
 	var conf interface{}
-	err = json.Unmarshal(resp.Body, &config)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.Decode(&conf)
 	if err != nil {
 		log.Fatal(err)
 	}
