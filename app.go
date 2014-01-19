@@ -35,6 +35,16 @@ type dataCloser struct {
 
 func (dataCloser) Close() error { return nil }
 
+// A Configuration Object
+type Conf struct {
+	User    map[string]int
+	File    map[string]int
+	Post    map[string]int
+	Message map[string]int
+	Channel map[string]int
+	Meta    map[string]int
+}
+
 // Our primary API struct. It's the source of all our awesome.
 type App struct {
 	ClientId     string
@@ -162,18 +172,18 @@ func (a *App) ProcessText(text string) *http.Response {
 }
 
 // Retrieves the App.Net Configuration Object
-func (a *App) GetConfig() (config interface{}) {
+func (a *App) GetConfig() (c *Conf) {
 	resp, err := a.get(baseURI+"stream/0/config", "application/json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var conf interface{}
+	c = &Conf{}
 	decoder := json.NewDecoder(resp.Body)
-	decoder.Decode(&conf)
+	decoder.Decode(&c)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return conf
+	return
 }
