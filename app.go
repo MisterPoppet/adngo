@@ -55,8 +55,8 @@ func (a *App) do(method, url, bodyType string, data url.Values) (resp *http.Resp
 	if data != nil {
 		req.Body = dataCloser{bytes.NewBufferString(data.Encode())}
 	}
-	if a.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+a.accessToken)
+	if a.AccessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+a.AccessToken)
 	}
 	if bodyType != "" {
 		req.Header.Add("Content-Type", bodyType)
@@ -88,7 +88,7 @@ func (a *App) delete(url string) (resp *http.Response, err error) {
 // Do we even need this??
 func (a *App) VerifyToken(delegate bool) *http.Response {
 	if delegate {
-		auth := []byte(a.clientId + ":" + a.clientSecret)
+		auth := []byte(a.ClientId + ":" + a.ClientSecret)
 		req, err := http.NewRequest("GET", baseURI+"stream/0/token", nil)
 		if err != nil {
 			log.Fatal(err)
@@ -115,7 +115,7 @@ func (a *App) VerifyToken(delegate bool) *http.Response {
 
 func (a *App) AuthURI(clientSide, appStore bool) (uri string) {
 	data := url.Values{}
-	data.Add("client_id", a.clientId)
+	data.Add("client_id", a.ClientId)
 	data.Add("redirect_uri", a.RedirectURI)
 	data.Add("scope", a.Scopes.String())
 
@@ -134,8 +134,8 @@ func (a *App) AuthURI(clientSide, appStore bool) (uri string) {
 func (a *App) GetAccessToken(code string, app bool) *http.Response {
 	if app {
 		data := url.Values{}
-		data.Add("client_id", a.clientId)
-		data.Add("client_secret", a.clientSecret)
+		data.Add("client_id", a.ClientId)
+		data.Add("client_secret", a.ClientSecret)
 		data.Add("grant_type", "client_credentials")
 
 		resp, err := a.post(authURI+"access_token", "", data)
